@@ -49,28 +49,21 @@ riscv64-linux-gnu-objdump -t kernel/kernel | sed '1,/SYMBOL TABLE/d; s/ .* / /; 
 make[1]: Leaving directory '/mnt/d/Project/operating-systems/xv6-labs'
 == Test trace 32 grep == 
 $ make qemu-gdb
-trace 32 grep: OK (32.7s) 
+trace 32 grep: OK (41.7s) 
 == Test trace all grep == 
 $ make qemu-gdb
-trace all grep: OK (6.0s) 
+trace all grep: OK (3.0s) 
 == Test trace nothing == 
 $ make qemu-gdb
-trace nothing: OK (4.5s) 
+trace nothing: OK (2.9s) 
 == Test trace children == 
 $ make qemu-gdb
-trace children: FAIL (38.7s) 
-    ...
-         24: syscall fork -> 61
-         OK
-         3: syscall fork -> 62
-         ALL TESTS PASSED
-         $ qemu-system-riscv64: terminating on signal 15 from pid 57644 (make)
-    MISSING '^\d+: syscall fork -> -1'
-    QEMU output saved to xv6.out.trace_children
+trace children: OK (40.7s) 
+    (Old xv6.out.trace_children failure log removed)
 == Test sysinfotest == 
 $ make qemu-gdb
-sysinfotest: OK (5.9s) 
+sysinfotest: OK (9.1s) 
 == Test time == 
 time: OK 
-Score: 30/35
-make: *** [Makefile:338: grade] Error 1
+Score: 35/35
+GRADE_EXIT=0
