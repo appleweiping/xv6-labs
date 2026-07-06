@@ -303,28 +303,65 @@ uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)
   pte_t *pte;
   uint64 pa, i;
   uint flags;
-  char *mem;
 
   for(i = 0; i < sz; i += PGSIZE){
     if((pte = walk(old, i, 0)) == 0)
       panic("uvmcopy: pte should exist");
     if((*pte & PTE_V) == 0)
       panic("uvmcopy: page not present");
+
+    // Copy-on-write: instead of copying the page, share it. Make both the
+    // parent and child mappings read-only and mark them COW; the actual copy
+    // happens lazily on the first write (page fault).
+    if(*pte & PTE_W){
+      *pte &= ~PTE_W;
+      *pte |= PTE_COW;
+    }
+
     pa = PTE2PA(*pte);
     flags = PTE_FLAGS(*pte);
-    if((mem = kalloc()) == 0)
+    if(mappages(new, i, PGSIZE, pa, flags) != 0)
       goto err;
-    memmove(mem, (char*)pa, PGSIZE);
-    if(mappages(new, i, PGSIZE, (uint64)mem, flags) != 0){
-      kfree(mem);
-      goto err;
-    }
+    // The physical page now has one more reference (the child's mapping).
+    kref_incr((void*)pa);
   }
   return 0;
 
  err:
   uvmunmap(new, 0, i / PGSIZE, 1);
   return -1;
+}
+
+// Handle a copy-on-write page fault at user virtual address `va`: allocate a
+// fresh page, copy the shared page into it, and remap va writable. Returns 0
+// on success, -1 if va is not a valid COW page or allocation fails.
+int
+cow_fault(pagetable_t pagetable, uint64 va)
+{
+  if(va >= MAXVA)
+    return -1;
+
+  pte_t *pte = walk(pagetable, va, 0);
+  if(pte == 0)
+    return -1;
+  if((*pte & PTE_V) == 0 || (*pte & PTE_U) == 0)
+    return -1;
+  if((*pte & PTE_COW) == 0)
+    return -1;   // a write fault on a non-COW page is a real error
+
+  uint64 pa = PTE2PA(*pte);
+  char *mem = kalloc();
+  if(mem == 0)
+    return -1;
+  memmove(mem, (char*)pa, PGSIZE);
+
+  uint flags = (PTE_FLAGS(*pte) & ~PTE_COW) | PTE_W;
+  // Replace the mapping with the private, writable copy.
+  *pte = PA2PTE((uint64)mem) | flags;
+
+  // Drop the reference to the old shared page.
+  kfree((void*)pa);
+  return 0;
 }
 
 // mark a PTE invalid for user access.
@@ -350,6 +387,17 @@ copyout(pagetable_t pagetable, uint64 dstva, char *src, uint64 len)
 
   while(len > 0){
     va0 = PGROUNDDOWN(dstva);
+    if(va0 >= MAXVA)
+      return -1;
+
+    // If the destination is a copy-on-write page, make a private copy first,
+    // otherwise the kernel would write into a page still shared with others.
+    pte_t *pte = walk(pagetable, va0, 0);
+    if(pte != 0 && (*pte & PTE_V) && (*pte & PTE_COW)){
+      if(cow_fault(pagetable, va0) < 0)
+        return -1;
+    }
+
     pa0 = walkaddr(pagetable, va0);
     if(pa0 == 0)
       return -1;
