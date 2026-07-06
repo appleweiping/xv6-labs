@@ -1,0 +1,18 @@
+== Test running kalloctest == fatal: not a git repository (or any of the parent directories): .git
+== Test   kalloctest: test1 == 
+  kalloctest: test1: OK 
+== Test   kalloctest: test2 == 
+  kalloctest: test2: OK 
+== Test kalloctest: sbrkmuch == 
+kalloctest: sbrkmuch: OK (22.5s) 
+== Test running bcachetest == 
+== Test   bcachetest: test0 == 
+  bcachetest: test0: OK 
+== Test   bcachetest: test1 == 
+  bcachetest: test1: OK 
+== Test usertests == 
+usertests: OK (233.9s) 
+== Test time == 
+time: OK 
+Score: 70/70
+GEXIT=0
