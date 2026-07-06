@@ -163,7 +163,24 @@ freeproc(struct proc *p)
   p->chan = 0;
   p->killed = 0;
   p->xstate = 0;
+  p->trace_mask = 0;
   p->state = UNUSED;
+}
+
+// Count the number of processes whose state is not UNUSED.
+uint64
+nproc(void)
+{
+  struct proc *p;
+  uint64 n = 0;
+
+  for(p = proc; p < &proc[NPROC]; p++){
+    acquire(&p->lock);
+    if(p->state != UNUSED)
+      n++;
+    release(&p->lock);
+  }
+  return n;
 }
 
 // Create a user page table for a given process,
@@ -300,6 +317,9 @@ fork(void)
     if(p->ofile[i])
       np->ofile[i] = filedup(p->ofile[i]);
   np->cwd = idup(p->cwd);
+
+  // Child inherits the parent's syscall trace mask.
+  np->trace_mask = p->trace_mask;
 
   safestrcpy(np->name, p->name, sizeof(p->name));
 
