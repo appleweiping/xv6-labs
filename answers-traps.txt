@@ -1,0 +1,41 @@
+RISC-V assembly warmup (user/call.c -> user/call.asm)
+
+1. Which registers contain the arguments to functions?
+   The argument registers a0..a7. For printf("%d %d\n", f(8)+1, 13), the value
+   13 is placed in register a2 (a0 = format string, a1 = first %d, a2 = second
+   %d).
+
+2. Where is the call to function f in the assembly for main? Where is the call
+   to g?
+   There is no explicit call. The compiler inlined both: f(8)+1 is computed at
+   compile time, so main just does `li a1,12` (the result of f(8)+1 = 12).
+   g is inlined into f, and f is inlined into main, so no jal/jalr to f or g
+   appears at all.
+
+3. At what address is the function printf located?
+   printf is at 0x630 (see user/call.asm / kernel.asm for the exact address in
+   your build). main reaches it via `auipc ra,0x0` followed by `jalr ra`, i.e.
+   a PC-relative call.
+
+4. What value is in the register ra just after the jalr to printf in main?
+   ra holds the return address: the address of the instruction immediately
+   following the jalr in main (0x38 in this build), so that printf returns to
+   the next instruction.
+
+5. Run this code and give the output:
+        unsigned int i = 0x00646c72;
+        printf("H%x Wo%s", 57616, &i);
+   Output: He110 World
+   57616 in hex is 0xe110, so "H%x" -> "He110". The bytes of i (little-endian)
+   are 0x72 0x6c 0x64 0x00 = 'r','l','d','\0', so &i as a string is "rld",
+   giving "Wo%s" -> "World".
+
+   If the RISC-V machine were big-endian, i would have to be set to
+   0x726c6400 to produce the same "rld" bytes. 57616 would NOT need to change,
+   because %x formats the integer value regardless of byte order.
+
+6. In the following code, what is going to be printed after 'y='?
+        printf("x=%d y=%d", 3);
+   The value printed for y is whatever happens to be in register a2 at the call
+   site (the second %d has no matching argument), so it is an undefined /
+   garbage value left over from before the call.

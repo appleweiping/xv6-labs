@@ -114,6 +114,25 @@ printf(char *fmt, ...)
     release(&pr.lock);
 }
 
+// Print the return addresses of the current call stack by walking the saved
+// frame pointers. Each stack frame stores the return address at fp-8 and the
+// caller's frame pointer at fp-16. The whole stack lives in one page, so we
+// stop once fp leaves that page.
+void
+backtrace(void)
+{
+  uint64 fp = r_fp();
+  uint64 top = PGROUNDUP(fp);
+  uint64 bottom = PGROUNDDOWN(fp);
+
+  printf("backtrace:\n");
+  while(fp >= bottom && fp < top){
+    uint64 ret = *(uint64 *)(fp - 8);
+    printf("%p\n", ret);
+    fp = *(uint64 *)(fp - 16);
+  }
+}
+
 void
 panic(char *s)
 {
@@ -121,6 +140,7 @@ panic(char *s)
   printf("panic: ");
   printf(s);
   printf("\n");
+  backtrace();
   panicked = 1; // freeze uart output from other CPUs
   for(;;)
     ;

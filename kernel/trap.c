@@ -76,6 +76,23 @@ usertrap(void)
   if(p->killed)
     exit(-1);
 
+  // On a timer interrupt, count down the process's alarm. When the interval
+  // elapses and no alarm handler is already running, save the user registers
+  // and arrange to run the handler on return to user space.
+  if(which_dev == 2){
+    if(p->alarm_interval > 0 && p->alarm_on == 0){
+      p->alarm_ticks++;
+      if(p->alarm_ticks >= p->alarm_interval){
+        p->alarm_ticks = 0;
+        p->alarm_on = 1;
+        // Save the current trapframe so sigreturn() can restore it.
+        *(p->alarm_tf) = *(p->trapframe);
+        // Enter the handler on return to user space.
+        p->trapframe->epc = (uint64)p->alarm_handler;
+      }
+    }
+  }
+
   // give up the CPU if this is a timer interrupt.
   if(which_dev == 2)
     yield();

@@ -1,0 +1,16 @@
+== Test answers-traps.txt == answers-traps.txt: OK 
+== Test backtrace test == fatal: not a git repository (or any of the parent directories): .git
+backtrace test: OK (6.4s) 
+== Test running alarmtest == 
+== Test   alarmtest: test0 == 
+  alarmtest: test0: OK 
+== Test   alarmtest: test1 == 
+  alarmtest: test1: OK 
+== Test   alarmtest: test2 == 
+  alarmtest: test2: OK 
+== Test usertests == 
+usertests: OK (199.1s) 
+== Test time == 
+time: OK 
+Score: 85/85
+GEXIT=0

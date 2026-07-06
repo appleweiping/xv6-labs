@@ -58,6 +58,8 @@ sys_sleep(void)
   int n;
   uint ticks0;
 
+  backtrace();
+
   if(argint(0, &n) < 0)
     return -1;
   acquire(&tickslock);
@@ -94,4 +96,41 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
+}
+
+// sigalarm(interval, handler): after every `interval` ticks of CPU time the
+// process consumes, the kernel should cause the process to call `handler`.
+// interval == 0 disables the alarm.
+uint64
+sys_sigalarm(void)
+{
+  int interval;
+  uint64 handler;
+
+  if(argint(0, &interval) < 0)
+    return -1;
+  if(argaddr(1, &handler) < 0)
+    return -1;
+
+  struct proc *p = myproc();
+  p->alarm_interval = interval;
+  p->alarm_handler = (void (*)())handler;
+  p->alarm_ticks = 0;
+  return 0;
+}
+
+// sigreturn(): called by the alarm handler when it finishes. Restore the
+// user registers that were saved when the handler was invoked, so execution
+// resumes exactly where the timer interrupt occurred, and allow future
+// alarms.
+uint64
+sys_sigreturn(void)
+{
+  struct proc *p = myproc();
+  // Restore the saved trapframe (all user registers, including epc).
+  *(p->trapframe) = *(p->alarm_tf);
+  p->alarm_on = 0;
+  // Return a0 from the restored trapframe so the syscall dispatcher does not
+  // clobber it.
+  return p->trapframe->a0;
 }
