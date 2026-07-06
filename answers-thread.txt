@@ -1,0 +1,14 @@
+Q: Why are there missing keys with 2 threads, but not with 1 thread?
+
+With a single thread the puts happen one at a time, so the hash-table update
+is never interrupted. With two (or more) threads both call put() concurrently.
+When two keys hash to the same bucket, both threads can read the same
+table[i] head, each builds a new entry whose ->next points at that same old
+head, and each writes table[i]. The second write overwrites the first, so the
+first thread's entry (and its key) is lost — a classic lost-update race on the
+shared linked list.
+
+Adding a per-bucket mutex around the read-modify-write in put() makes each
+bucket update atomic, so no updates are lost. Using one lock per bucket (rather
+than a single global lock) lets puts to different buckets run in parallel,
+which is what gives the required speedup with two threads.
