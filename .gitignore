@@ -1,0 +1,15 @@
+# Build artifacts
+*.o
+*.d
+*.asm
+*.sym
+*.out
+kernel/kernel
+user/initcode
+user/initcode.out
+user/usys.S
+mkfs/mkfs
+fs.img
+.gdbinit
+xv6.out
+*.tmp
