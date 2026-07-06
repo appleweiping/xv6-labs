@@ -432,3 +432,32 @@ copyinstr(pagetable_t pagetable, char *dst, uint64 srcva, uint64 max)
     return -1;
   }
 }
+
+// Recursively print the valid entries of a page table, indented one
+// "level" of " .." per level of the tree (as required by the pgtbl lab).
+static void
+vmprint_walk(pagetable_t pagetable, int level)
+{
+  for(int i = 0; i < 512; i++){
+    pte_t pte = pagetable[i];
+    if(pte & PTE_V){
+      // Indent: one " .." for each level from the top (level 1..3).
+      for(int l = 0; l < level; l++)
+        printf(" ..");
+      uint64 pa = PTE2PA(pte);
+      printf("%d: pte %p pa %p\n", i, pte, pa);
+      // If this PTE points to a lower-level table (not a leaf), recurse.
+      if((pte & (PTE_R|PTE_W|PTE_X)) == 0){
+        vmprint_walk((pagetable_t)pa, level + 1);
+      }
+    }
+  }
+}
+
+// Print the page table `pagetable` in the format expected by the pgtbl lab.
+void
+vmprint(pagetable_t pagetable)
+{
+  printf("page table %p\n", pagetable);
+  vmprint_walk(pagetable, 1);
+}

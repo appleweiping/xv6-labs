@@ -1,0 +1,19 @@
+Explanation of the vmprint output for the first process (init):
+
+The top-level (level-2) page table has three valid entries:
+
+  ..0   maps the low part of the user address space. Walking down two more
+        levels reaches the leaf PTEs that map the process's text/data page
+        (index 0), the guard page and the user stack (indices 1 and 2). These
+        are the pages allocated by exec() for the program image and stack.
+
+  ..255 maps the top of the user address space. Its subtree reaches three
+        leaf pages at the highest virtual addresses: the TRAMPOLINE page
+        (shared, PTE_R|PTE_X, no PTE_U), the TRAPFRAME page (PTE_R|PTE_W,
+        used by trampoline.S), and — in this lab — the USYSCALL page
+        (PTE_R|PTE_U, read-only shared with the user for ugetpid()).
+
+Each non-leaf PTE stores the physical address of the next-level page-table
+page; a leaf PTE stores the physical address of a data page together with the
+permission bits (V/R/W/X/U). The page number in a PTE equals (pte >> 10), so
+the physical address printed is ((pte >> 10) << 12).
