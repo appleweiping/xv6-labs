@@ -1,0 +1,22 @@
+== xv6 Lab: cow -- grade-lab-cow ==
+Host: WSL2 Ubuntu, QEMU riscv64 TCG emulation (cross-arch, no KVM).
+Slow tests (usertests etc.) run with GRADE_TIMEOUT_SCALE so emulation
+gets adequate wall-clock time; the tests themselves are unmodified.
+
+(47.4s) 
+== Test   simple == 
+  simple: OK 
+== Test   three == 
+  three: OK 
+== Test   file == 
+  file: OK 
+== Test usertests == (762.4s) 
+== Test   usertests: copyin == 
+  usertests: copyin: OK 
+== Test   usertests: copyout == 
+  usertests: copyout: OK 
+== Test   usertests: all tests == 
+  usertests: all tests: OK 
+== Test time == 
+time: OK 
+Score: 110/110
