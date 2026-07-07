@@ -1,0 +1,25 @@
+== xv6 Lab: mmap (memory-mapped files) — grade-lab-mmap ==
+Host: WSL2 Ubuntu, QEMU riscv64 TCG emulation.
+Implementation written from scratch (kernel/sysmmap.c + VMA in proc.h,
+lazy-fault handling in trap.c, uvmunmap_lazy/walk_lookup in vm.c):
+- mmap() records a VMA (lazy); regions grow downward below TRAPFRAME.
+- page fault (scause 13/15) -> mmap_fault(): kalloc, readi the file slice,
+  map with prot-derived PTE bits.
+- munmap(): flush dirty MAP_SHARED pages via PTE_D, uvmunmap_lazy the range,
+  shrink/close the VMA; supports prefix and suffix unmap.
+- fork copies VMAs (filedup, lazy re-fault in child); exit runs mmap_cleanup.
+
+== Test running mmaptest ==
+== Test   mmaptest: mmap f ==            mmaptest: mmap f: OK
+== Test   mmaptest: mmap private ==      mmaptest: mmap private: OK
+== Test   mmaptest: mmap read-only ==    mmaptest: mmap read-only: OK
+== Test   mmaptest: mmap read/write ==   mmaptest: mmap read/write: OK
+== Test   mmaptest: mmap dirty ==        mmaptest: mmap dirty: OK
+== Test   mmaptest: not-mapped unmap ==  mmaptest: not-mapped unmap: OK
+== Test   mmaptest: two files ==         mmaptest: two files: OK
+== Test   mmaptest: fork_test ==         mmaptest: fork_test: OK
+== Test usertests ==
+usertests: OK (205.2s)
+== Test time ==
+time: OK
+Score: 140/140
