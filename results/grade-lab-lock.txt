@@ -1,0 +1,20 @@
+== xv6 Lab: lock -- grade-lab-lock ==
+Host: WSL2 Ubuntu, QEMU riscv64 TCG emulation (cross-arch, no KVM).
+Slow tests (usertests etc.) run with GRADE_TIMEOUT_SCALE so emulation
+gets adequate wall-clock time; the tests themselves are unmodified.
+
+(261.5s) 
+== Test   kalloctest: test1 == 
+  kalloctest: test1: OK 
+== Test   kalloctest: test2 == 
+  kalloctest: test2: OK 
+== Test kalloctest: sbrkmuch == kalloctest: sbrkmuch: OK (46.7s) 
+== Test running bcachetest == (53.2s) 
+== Test   bcachetest: test0 == 
+  bcachetest: test0: OK 
+== Test   bcachetest: test1 == 
+  bcachetest: test1: OK 
+== Test usertests == usertests: OK (578.2s) 
+== Test time == 
+time: OK 
+Score: 70/70
