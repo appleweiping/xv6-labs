@@ -1,0 +1,16 @@
+== xv6 Lab: thread -- grade-lab-thread ==
+Host: WSL2 Ubuntu, QEMU riscv64 TCG emulation (cross-arch, no KVM).
+Slow tests (usertests etc.) run with GRADE_TIMEOUT_SCALE so emulation
+gets adequate wall-clock time; the tests themselves are unmodified.
+
+uthread: OK (18.1s) 
+== Test answers-thread.txt == answers-thread.txt: OK 
+gcc -o ph -g -O2 -DSOL_THREAD -DLAB_THREAD notxv6/ph.c -pthread
+ph_safe: OK (51.2s) 
+make: 'ph' is up to date.
+ph_fast: OK (94.4s) 
+gcc -o barrier -g -O2 -DSOL_THREAD -DLAB_THREAD notxv6/barrier.c -pthread
+barrier: OK (6.6s) 
+== Test time == 
+time: OK 
+Score: 60/60
