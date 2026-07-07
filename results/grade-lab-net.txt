@@ -1,0 +1,21 @@
+== xv6 Lab: net (Networking / e1000 driver) — grade-lab-net ==
+Host: WSL2 Ubuntu, QEMU riscv64 TCG emulation.
+Implementation: kernel/e1000.c e1000_transmit() and e1000_recv() written
+from the MIT skeleton stubs. TX: check the tail descriptor's DD bit for ring
+overflow, free the previous mbuf in the slot, program addr/length/cmd
+(RS|EOP), advance TDT with a memory barrier. RX: drain every descriptor whose
+DD bit is set, hand each mbuf to net_rx(), refill with a fresh mbuf, advance
+RDT. e1000_lock guards the TX ring.
+
+== Test running nettests ==
+== Test   nettest: ping ==
+  nettest: ping: OK
+== Test   nettest: single process ==
+  nettest: single process: OK
+== Test   nettest: multi-process ==
+  nettest: multi-process: OK
+== Test   nettest: DNS ==
+  nettest: DNS: OK
+== Test time ==
+time: OK
+Score: 100/100
