@@ -429,6 +429,14 @@ class Runner():
             return target_base, make_args, timeout
         target_base, make_args, timeout = run_qemu_kw(**kw)
 
+        # Allow slow emulation hosts (e.g. QEMU under WSL2) to scale every
+        # per-test timeout without changing WHAT is tested. Defaults to 1.0,
+        # i.e. identical to the upstream MIT grader, when the env var is unset.
+        try:
+            timeout *= float(os.environ.get("GRADE_TIMEOUT_SCALE", "1"))
+        except (TypeError, ValueError):
+            pass
+
         # Start QEMU
         pre_make()
         self.qemu = QEMU(target_base + "-gdb", *make_args)

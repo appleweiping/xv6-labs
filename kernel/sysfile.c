@@ -309,6 +309,33 @@ sys_open(void)
       return -1;
     }
     ilock(ip);
+
+    // Follow symbolic links, unless O_NOFOLLOW was given. Bound the number of
+    // hops to detect cycles.
+    if(ip->type == T_SYMLINK && !(omode & O_NOFOLLOW)){
+      int depth = 0;
+      while(ip->type == T_SYMLINK){
+        if(++depth > 10){
+          // Too many links: likely a cycle.
+          iunlockput(ip);
+          end_op();
+          return -1;
+        }
+        char target[MAXPATH];
+        if(readi(ip, 0, (uint64)target, 0, MAXPATH) <= 0){
+          iunlockput(ip);
+          end_op();
+          return -1;
+        }
+        iunlockput(ip);
+        if((ip = namei(target)) == 0){
+          end_op();
+          return -1;
+        }
+        ilock(ip);
+      }
+    }
+
     if(ip->type == T_DIR && omode != O_RDONLY){
       iunlockput(ip);
       end_op();
@@ -482,5 +509,39 @@ sys_pipe(void)
     fileclose(wf);
     return -1;
   }
+  return 0;
+}
+
+// symlink(target, path): create a new symbolic link at `path` that refers to
+// `target`. The target path is stored in the symlink inode's data block; it
+// need not exist. link/unlink operate on the symlink itself.
+uint64
+sys_symlink(void)
+{
+  char target[MAXPATH], path[MAXPATH];
+  struct inode *ip;
+
+  if(argstr(0, target, MAXPATH) < 0 || argstr(1, path, MAXPATH) < 0)
+    return -1;
+
+  begin_op();
+
+  ip = create(path, T_SYMLINK, 0, 0);
+  if(ip == 0){
+    end_op();
+    return -1;
+  }
+
+  // create() returns the inode locked. Store the target path (including its
+  // terminating nul) in the symlink's first data block.
+  int len = strlen(target) + 1;
+  if(writei(ip, 0, (uint64)target, 0, len) != len){
+    iunlockput(ip);
+    end_op();
+    return -1;
+  }
+
+  iunlockput(ip);
+  end_op();
   return 0;
 }

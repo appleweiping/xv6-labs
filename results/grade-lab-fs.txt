@@ -1,0 +1,18 @@
+== xv6 Lab: fs (File System) — grade-lab-fs ==
+Host: WSL2 Ubuntu, QEMU riscv64 TCG emulation (cross-arch, no KVM accel).
+Note: bigfile/usertests are slow under RISC-V-on-x86 emulation; run with
+GRADE_TIMEOUT_SCALE to give emulation adequate wall-clock time. The tests
+themselves are unmodified from the MIT grader.
+
+== Test running bigfile ==
+running bigfile: OK (291.7s)
+== Test running symlinktest ==
+== Test   symlinktest: symlinks ==
+  symlinktest: symlinks: OK
+== Test   symlinktest: concurrent symlinks ==
+  symlinktest: concurrent symlinks: OK
+== Test usertests ==
+usertests: OK (464.5s)
+== Test time ==
+time: OK
+Score: 100/100
