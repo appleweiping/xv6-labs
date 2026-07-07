@@ -186,6 +186,38 @@ uvmunmap(pagetable_t pagetable, uint64 va, uint64 npages, int do_free)
   }
 }
 
+#ifdef LAB_MMAP
+// Like walk(alloc=0) but exposed for the mmap code: return the PTE for va, or
+// 0 if the intermediate page tables do not exist.
+pte_t *
+walk_lookup(pagetable_t pagetable, uint64 va)
+{
+  return walk(pagetable, va, 0);
+}
+
+// Like uvmunmap(do_free=1) but tolerant of pages that were never mapped,
+// which is normal for lazily-populated mmap regions. va must be page-aligned.
+void
+uvmunmap_lazy(pagetable_t pagetable, uint64 va, uint64 npages)
+{
+  uint64 a;
+  pte_t *pte;
+
+  if((va % PGSIZE) != 0)
+    panic("uvmunmap_lazy: not aligned");
+
+  for(a = va; a < va + npages*PGSIZE; a += PGSIZE){
+    if((pte = walk(pagetable, a, 0)) == 0)
+      continue;                     // no page table for this va
+    if((*pte & PTE_V) == 0)
+      continue;                     // never faulted in
+    uint64 pa = PTE2PA(*pte);
+    kfree((void*)pa);
+    *pte = 0;
+  }
+}
+#endif
+
 // create an empty user page table.
 // returns 0 if out of memory.
 pagetable_t

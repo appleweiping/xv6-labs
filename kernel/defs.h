@@ -170,6 +170,16 @@ uint64          walkaddr(pagetable_t, uint64);
 int             copyout(pagetable_t, uint64, char *, uint64);
 int             copyin(pagetable_t, char *, uint64, uint64);
 int             copyinstr(pagetable_t, char *, uint64, uint64);
+#ifdef LAB_MMAP
+pte_t *         walk_lookup(pagetable_t, uint64);
+void            uvmunmap_lazy(pagetable_t, uint64, uint64);
+#endif
+
+#ifdef LAB_MMAP
+// sysmmap.c
+int             mmap_fault(uint64);
+void            mmap_cleanup(struct proc*);
+#endif
 
 // plic.c
 void            plicinit(void);

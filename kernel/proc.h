@@ -82,6 +82,21 @@ struct trapframe {
 
 enum procstate { UNUSED, USED, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 
+#ifdef LAB_MMAP
+// A virtual memory area: one contiguous region created by mmap(). Pages are
+// allocated lazily on page fault. `addr`..`addr+length` is the mapped range.
+#define NVMA 16
+struct vma {
+  int used;          // is this slot in use?
+  uint64 addr;       // start virtual address of the mapping
+  uint64 length;     // length in bytes
+  int prot;          // PROT_READ | PROT_WRITE | ...
+  int flags;         // MAP_SHARED | MAP_PRIVATE
+  int offset;        // offset into the file
+  struct file *f;    // the mapped file
+};
+#endif
+
 // Per-process state
 struct proc {
   struct spinlock lock;
@@ -105,4 +120,7 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
+#ifdef LAB_MMAP
+  struct vma vmas[NVMA];       // memory-mapped regions (mmap)
+#endif
 };
