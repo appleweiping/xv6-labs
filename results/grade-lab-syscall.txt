@@ -1,0 +1,13 @@
+== xv6 Lab: syscall -- grade-lab-syscall ==
+Host: WSL2 Ubuntu, QEMU riscv64 TCG emulation (cross-arch, no KVM).
+Slow tests (usertests etc.) run with GRADE_TIMEOUT_SCALE so emulation
+gets adequate wall-clock time; the tests themselves are unmodified.
+
+trace 32 grep: OK (5.0s) 
+== Test trace all grep == trace all grep: OK (0.9s) 
+== Test trace nothing == trace nothing: OK (0.8s) 
+== Test trace children == trace children: OK (22.4s) 
+== Test sysinfotest == sysinfotest: OK (2.7s) 
+== Test time == 
+time: OK 
+Score: 35/35
