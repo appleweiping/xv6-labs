@@ -92,29 +92,75 @@ e1000_init(uint32 *xregs)
   regs[E1000_IMS] = (1 << 7); // RXDW -- Receiver Descriptor Write Back
 }
 
+// Transmit an ethernet frame held in the mbuf `m`. Returns 0 on success,
+// -1 if the TX ring is full. On success the e1000 owns `m` until it has
+// finished sending it; we free the mbuf that previously occupied the slot.
 int
 e1000_transmit(struct mbuf *m)
 {
-  //
-  // Your code here.
-  //
-  // the mbuf contains an ethernet frame; program it into
-  // the TX descriptor ring so that the e1000 sends it. Stash
-  // a pointer so that it can be freed after sending.
-  //
+  acquire(&e1000_lock);
 
+  // TDT is the index of the next descriptor software may hand to the NIC.
+  uint32 index = regs[E1000_TDT];
+
+  // If the descriptor the hardware would next transmit is not yet marked
+  // Descriptor Done, the ring has overflowed: drop this packet.
+  if((tx_ring[index].status & E1000_TXD_STAT_DD) == 0){
+    release(&e1000_lock);
+    return -1;
+  }
+
+  // The previous mbuf that lived in this slot has now been sent; free it.
+  if(tx_mbufs[index])
+    mbuffree(tx_mbufs[index]);
+
+  // Fill in the descriptor to point at the new packet.
+  tx_ring[index].addr = (uint64)m->head;
+  tx_ring[index].length = m->len;
+  tx_ring[index].cmd = E1000_TXD_CMD_RS | E1000_TXD_CMD_EOP;
+  tx_ring[index].status = 0;
+  tx_mbufs[index] = m;
+
+  // Advance the tail so the e1000 picks up this descriptor.
+  regs[E1000_TDT] = (index + 1) % TX_RING_SIZE;
+  __sync_synchronize();
+
+  release(&e1000_lock);
   return 0;
 }
 
+// Deliver every packet the e1000 has written into the RX ring since the last
+// call. For each ready descriptor we hand its mbuf up the stack via net_rx()
+// and refill the slot with a fresh mbuf so the NIC can reuse it.
 static void
 e1000_recv(void)
 {
-  //
-  // Your code here.
-  //
-  // Check for packets that have arrived from the e1000
-  // Create and deliver an mbuf for each packet (using net_rx()).
-  //
+  while(1){
+    // The next descriptor to check is the one after RDT.
+    uint32 index = (regs[E1000_RDT] + 1) % RX_RING_SIZE;
+
+    // Stop when we reach a descriptor the hardware has not filled yet.
+    if((rx_ring[index].status & E1000_RXD_STAT_DD) == 0)
+      return;
+
+    // Hand the received packet to the network stack.
+    struct mbuf *m = rx_mbufs[index];
+    m->len = rx_ring[index].length;
+    net_rx(m);
+
+    // Allocate a fresh mbuf for the descriptor and clear its status so the
+    // e1000 can deliver another packet into it.
+    struct mbuf *nm = mbufalloc(0);
+    if(nm == 0)
+      panic("e1000_recv: mbufalloc");
+    rx_mbufs[index] = nm;
+    rx_ring[index].addr = (uint64)nm->head;
+    rx_ring[index].status = 0;
+
+    // Advance RDT to hand this descriptor back to the hardware.
+    regs[E1000_RDT] = index;
+    __sync_synchronize();
+  }
 }
 
 void
