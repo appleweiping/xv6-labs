@@ -1,0 +1,18 @@
+== xv6 Lab: pgtbl -- grade-lab-pgtbl ==
+Host: WSL2 Ubuntu, QEMU riscv64 TCG emulation (cross-arch, no KVM).
+Slow tests (usertests etc.) run with GRADE_TIMEOUT_SCALE so emulation
+gets adequate wall-clock time; the tests themselves are unmodified.
+
+(12.8s) 
+== Test   pgtbltest: ugetpid == 
+  pgtbltest: ugetpid: OK 
+== Test   pgtbltest: pgaccess == 
+  pgtbltest: pgaccess: OK 
+== Test pte printout == pte printout: OK (2.6s) 
+== Test answers-pgtbl.txt == answers-pgtbl.txt: OK 
+== Test usertests == (569.2s) 
+== Test   usertests: all tests == 
+  usertests: all tests: OK 
+== Test time == 
+time: OK 
+Score: 46/46
