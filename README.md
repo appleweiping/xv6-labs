@@ -24,7 +24,7 @@ where every lab is a separate branch that builds on the base kernel). `main`
 holds the unmodified official skeleton; check out a lab branch to see that lab's
 implementation and its captured grader output under `results/`.
 
-## Results (measured on WSL2 Ubuntu, QEMU `qemu-system-riscv64`, TCG emulation)
+## Results (measured on WSL2 Ubuntu 24.04, QEMU 8.2.2 `qemu-system-riscv64` TCG emulation, `gcc-riscv64-linux-gnu` 13.3.0; captured 2026-07-09)
 
 Every lab was graded with the course's own `grade-lab-<name>` script and scores
 its maximum. Because the guest is RISC-V emulated on an x86 host (no KVM for a
@@ -46,8 +46,13 @@ every per-test wall-clock timeout **without changing what is tested** (default
 | 9. File system      | `fs`      | doubly-indirect blocks (big files) + symbolic links | **100/100** |
 | 10. mmap            | `mmap`    | lazy memory-mapped files (`mmap`/`munmap`) | **140/140** |
 
-Full captured autograder transcripts are on each branch under
-`results/grade-lab-<name>.txt`.
+The full captured `make grade` transcripts for all ten labs are collected on
+this `main` branch under [`results/`](results/) (`results/grade-<name>.txt`), so
+they are visible on the default branch without switching branches. Each lab
+branch additionally carries its own `results/grade-lab-<name>.txt`. Every
+transcript is the real, unedited grader output: the RISC-V compile log, each
+QEMU boot, the per-test `OK` lines with wall-clock timings, and the final
+`Score:` line.
 
 ## Per-branch layout
 
